@@ -1,0 +1,5 @@
+Python Function      PHP Equivalent
+----------------     --------------
+len()                count()
+os.path.exists()     file_exists()
+datetime.now()       date()
