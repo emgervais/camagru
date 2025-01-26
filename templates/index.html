@@ -28,10 +28,10 @@
             </form>
         </div>
     </header>
-    <div class="overlay" styles="display: none;">
+    <div id="overlay" styles="display: none;">
         <section id="login" class="auth-form">
             <h2>Login</h2>
-            <form>
+            <div>
                 <label for="username">username:</label>
                 <input type="text" id="login-username" name="username" required>
                 <label for="password">Password:</label>
@@ -39,7 +39,7 @@
                 <button type="submit" onclick="login()">Login</button>
                 <button type="button" onclick="showRegister()">register</button>
                 <button type="button" onclick="showReset()">forgot password</button>
-            </form>
+            </div>
         </section>
         <section id="register" style="display: none;" class="auth-form">
             <h2>Register</h2>
