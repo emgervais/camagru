@@ -3,7 +3,7 @@
 include "user.php";
 class AuthController {
     private $conn;
-    private User $user;
+    public User $user;
 
     public function __construct(
         private $db

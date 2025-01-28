@@ -1,3 +1,39 @@
+function isLogged() {
+    fetch('/api/isLogged', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+}    }).then(response => {
+        return response.json();
+    }).then(data => {
+        console.log('Response:', data);
+        if (data.logged) {
+            hideLogin();
+        }
+    })
+}
+isLogged();  
+
+function logout() {
+    fetch('/api/logout', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        }
+    }).then(response => {
+        return response.json();
+    }).then(data => {
+        console.log('Response:', data);
+        if (data.logged) {
+            alert('Logout failed');
+        }
+        else
+            window.location.href = '/';
+    })
+}
+
 function showLogin() {
     document.getElementById('login').style.display = 'flex';
     document.getElementById('register').style.display = 'none';
@@ -19,87 +55,63 @@ function showModify() {
 }
 
 function login() {
-    console.log('Logging in...');
-        const username = document.getElementById('login-username').value;
-        const password = document.getElementById('login-password').value;
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
 
-        if (!username || !password) {    
-            alert('Please fill out all fields');
+    if (!username || !password) {    
+        alert('Please fill out all fields');
+        return;
+    }
+
+    fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin',
+        mode: 'cors',
+        body: JSON.stringify({ 
+            username: username, 
+            password: password 
+        })
+    }).then(response => {
+        if (!response.ok) {
+            alert('Login failed');
             return;
         }
-
-        fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin',
-            mode: 'cors',
-            body: JSON.stringify({ 
-                username: username, 
-                password: password 
-            })
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        }).then(data => {
-            console.log('Response:', data);
-            if (data.token) {
-                document.cookie = 'token=' + data.token;
-                // window.location.href = '/';
-                hideLogin();
-            } else {
-                alert('Login failed: Invalid response from server');
-            }
-        }).catch(error => {
-            console.error('Login error:', error);
-            alert(`Login failed: ${error.message}`);
-        });
+        hideLogin();
+    })
 }
 
 function register() {
-    console.log('Logging in...');
-        const username = document.getElementById('register-username').value;
-        const password = document.getElementById('register-password').value;
-        const email = document.getElementById('register-email').value;
+    const username = document.getElementById('register-username').value;
+    const password = document.getElementById('register-password').value;
+    const email = document.getElementById('register-email').value;
 
-        if (!username || !password || !email) {    
-            alert('Please fill out all fields');
+    if (!username || !password || !email) {    
+        alert('Please fill out all fields');
+        return;
+    }
+
+    fetch('/api/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin',
+        mode: 'cors',
+        body: JSON.stringify({ 
+            email: email,
+            username: username, 
+            password: password 
+        })
+    }).then(response => {
+        if (!response.ok) {
+            alert('failed to register try again');
             return;
         }
-
-        fetch('/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin',
-            mode: 'cors',
-            body: JSON.stringify({ 
-                email: email,
-                username: username, 
-                password: password 
-            })
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        }).then(data => {
-            console.log('Response:', data);
-            if (data.token) {
-                document.cookie = 'token=' + data.token;
-                // window.location.href = '/';
-                hideLogin();
-            } else {
-                alert('Login failed: Invalid response from server');
-            }
-        }).catch(error => {
-            console.error('Login error:', error);
-            alert(`Login failed: ${error.message}`);
-        });
+        alert('Registration successfull, please check your email to confirm');
+    })
 }

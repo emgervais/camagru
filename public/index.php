@@ -11,7 +11,7 @@ include 'db.php';
 $database = new Database();
 $db = $database->getConnection();
 $auth = new AuthController($db);
-
+session_start();
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -25,19 +25,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && count($uri) <= 2) {
         exit;
     }
 }
-
-switch($uri[2]) {
-    case 'register':
-        $response = $auth->register($data);
-        echo json_encode($response);
-        break;
-    
-    case 'login':
-        $response = $auth->login($data);
-        echo json_encode($response);
-        break;
-    default:
-        http_response_code(404);
-        echo json_encode(["message" => "Endpoint not found"]);
-        break;
+if ($uri[1] === 'api') {
+    switch($uri[2]) {
+        case 'register':
+            $response = $auth->register($data);
+            $response['status'] === 'success' ? http_response_code(200) : http_response_code(401);
+            echo json_encode($response);
+            break;
+        case 'login':
+            $response = $auth->login($data);
+            $response['status'] === 'success' ? http_response_code(200) : http_response_code(401);
+            echo json_encode($response);
+            break;
+        case 'isLogged':
+            try {
+                if (!isset($_SESSION)) {
+                    throw new Exception('Session not started');
+                }
+                http_response_code(200);
+                echo json_encode([
+                    "logged" => $auth->user->checkSession(),
+                    "status" => true
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    "logged" => false,
+                    "status" => false,
+                ]);
+            }
+            break;
+        case 'logout':
+            try {
+                if (!isset($_SESSION)) {
+                    throw new Exception('Session not started');
+                }
+                session_destroy();
+                echo json_encode([
+                    "message" => "Logged out",
+                    "logged" => false
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    "message" => "Failed to log out",
+                    "status" => true
+                ]);
+            }
+            break;
+        default:
+            http_response_code(404);
+            echo json_encode(["message" => "Endpoint not found"]);
+            break;
+    }
 }

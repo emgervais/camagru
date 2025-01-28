@@ -119,16 +119,27 @@ class user {
     }
 
     public function verifyPassword($password) {
-        $query = "SELECT password FROM users WHERE username = ?";
+        $query = "SELECT id, password FROM users WHERE username = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $this->username);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        if($result) {
-            if(password_verify($password, $result['password'])) {
-                return true;
-            }
+        if($result && password_verify($password, $result['password'])) {
+            $_SESSION['user_id'] = $result['id'];
+            $_SESSION['username'] = $this->username;
+            $_SESSION['logged_in'] = true;
+            return true;
         }
         return false;
+    }
+
+    public function checkSession() {
+        return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+    }
+
+    public function logout() {
+        session_unset();
+        session_destroy();
+        setcookie(session_name(), '', time() - 3600);
     }
 }
