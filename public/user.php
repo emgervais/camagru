@@ -24,7 +24,7 @@ class user {
                     password=:password,
                     verification_token=:token,
                     notification=1,
-                    is_verified=1,
+                    is_verified=0,
                     password_reset_token=NULL";
 
         $stmt = $this->conn->prepare($query);
@@ -36,7 +36,6 @@ class user {
         $stmt->bindParam(":email", $this->email);
         $stmt->bindParam(":password", $this->password);
         $stmt->bindParam(":token", $this->verification_token);
-
         return $stmt->execute();
     }
 
@@ -141,5 +140,41 @@ class user {
         session_unset();
         session_destroy();
         setcookie(session_name(), '', time() - 3600);
+    }
+
+    public function verifyToken($token) {
+        $query = "SELECT id, username FROM users WHERE verification_token = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $token);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($stmt->rowCount() > 0) {
+            $_SESSION['user_id'] = $result['id'];
+            $_SESSION['username'] = $result['username'];
+            $_SESSION['logged_in'] = true;
+            $query = "UPDATE users SET is_verified = 1, verification_token = NULL WHERE verification_token = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $token);
+            return $stmt->execute();
+        }
+        return false;
+    }
+    public function verifyTokenPassword($token, $password) {
+        $query = "SELECT id, username FROM users WHERE password_reset_token = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $token);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($stmt->rowCount() > 0) {
+            $_SESSION['user_id'] = $result['id'];
+            $_SESSION['username'] = $result['username'];
+            $_SESSION['logged_in'] = true;
+            $query = "UPDATE users SET password = ?, password_reset_token = NULL WHERE password_reset_token = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, password_hash($password, PASSWORD_DEFAULT));
+            $stmt->bindParam(2, $token);
+            return $stmt->execute();
+        }
+        return false;
     }
 }

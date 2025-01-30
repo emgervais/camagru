@@ -12,6 +12,7 @@ function isLogged() {
             hideLogin();
         }
     })
+    window.history.pushState({}, '', '/');
 }
 isLogged();  
 

@@ -1,4 +1,5 @@
 <?php
+session_start();
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
@@ -11,7 +12,6 @@ include 'db.php';
 $database = new Database();
 $db = $database->getConnection();
 $auth = new AuthController($db);
-session_start();
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -73,6 +73,31 @@ if ($uri[1] === 'api') {
                 ]);
             }
             break;
+        case 'verify':
+            $token = isset($_GET['token']) ? $_GET['token'] : null;
+            $auth->verifyToken($token) ? http_response_code(201) : http_response_code(401);//maybe not correct
+            $indexPath = dirname(__DIR__) . '/public/templates/index.html';
+            if (file_exists($indexPath)) {
+                header('Content-Type: text/html');
+                readfile($indexPath);
+            }
+            break;
+        case 'changePassword':
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                header('Content-Type: text/html');
+                readfile(dirname(__DIR__) . '/public/templates/reset.html');
+                exit;
+            }
+            $response = $auth->changePassword($data);
+            if ($response) {
+                header('Location: /', true, 200);
+                exit;
+            } 
+            else {
+                http_response_code(301);
+            }
+            break;
+            
         default:
             http_response_code(404);
             echo json_encode(["message" => "Endpoint not found"]);

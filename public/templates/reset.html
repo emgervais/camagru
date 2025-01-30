@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#">Feed</a></li>
+                <li><a href="post.html">Post</a></li>
+                <li><a onclick="showModify()">Change info</a></li>
+                <li><a onclick="showLogin()"><i class="fa-regular fa-bell"></i></a></li>
+                <li><button onclick="logout()">logout</button></li>
+            </ul>
+        </nav>
+        <div id="modify" style="display: none;">
+            <form>
+                <label for="email">email:</label>
+                <input type="text" id="change-email" name="email" required>
+                <label for="username">username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" autocomplete="" required>
+                <button type="submit">Change info</button>
+            </form>
+        </div>
+    </header>
+    <div id="overlay" styles="display: none;">
+        <section>
+            <h2>Change password</h2>
+            <div>
+                <label for="change-password">password:</label>
+                <input type="text" id="change-password" name="password" required>
+                <label for="change-password2">repeat password:</label>
+                <input type="text" id="change-password2" name="password" required>
+                <button type="submit" onclick="changePassword()">Change password</button>
+            </div>
+        </section>
+    <footer>
+        <p>&copy; 2020</p>
+    </footer>
+    <script>
+        function changePassword() {
+    const pass1 = document.getElementById('change-password').value;
+    const pass2 = document.getElementById('change-password2').value;
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (!pass1 || !pass2) {
+        alert('Please fill out all fields');
+        return;
+    }
+
+    if (pass2 != pass1) {
+        alert('Passwords do not match');
+        return;
+    }
+
+    fetch('/api/changePassword', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            password: pass1,
+            token: token
+        })
+    }).then(response => {
+        if (!response.ok)
+            alert('Password change failed');
+        else
+            window.location.href = '/';
+    })
+}
+    </script>
+</body>
+</html>
