@@ -97,7 +97,23 @@ if ($uri[1] === 'api') {
                 http_response_code(301);
             }
             break;
-            
+        case 'forgotPassword':
+            $response = $auth->forgotPassword($data);
+            if ($response)
+                http_response_code(200);
+            else
+                http_response_code(401);
+            break;
+
+        case 'changeInfo':
+            $response = $auth->changeInfo($data);
+            if ($response['status'] === "success")
+                http_response_code(200);
+            else {
+                http_response_code(401);
+                echo json_encode($response);
+            }
+            break;
         default:
             http_response_code(404);
             echo json_encode(["message" => "Endpoint not found"]);

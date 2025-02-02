@@ -30,7 +30,7 @@ class user {
         $stmt = $this->conn->prepare($query);
 
         $this->password = password_hash($this->password, PASSWORD_DEFAULT);
-        $this->verification_token = bin2hex(random_bytes(50));
+        $this->verification_token = 1;//bin2hex(random_bytes(50));
 
         $stmt->bindParam(":username", $this->username);
         $stmt->bindParam(":email", $this->email);
@@ -39,10 +39,10 @@ class user {
         return $stmt->execute();
     }
 
-    public function emailExists() {
+    public function emailExists($email) {
         $query = "SELECT id FROM users WHERE email = ?";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->email);
+        $stmt->bindParam(1, $email);
         $stmt->execute();
         return $stmt->rowCount() > 0;
     }
@@ -108,10 +108,10 @@ class user {
         return $stmt->execute();
     }
     
-    public function userExists() {
+    public function userExists($username) {
         $query = "SELECT id FROM users WHERE username = ? AND is_verified = 1";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->username);
+        $stmt->bindParam(1, $username);
         $stmt->execute();
         
         return $stmt->rowCount() > 0;
@@ -171,10 +171,75 @@ class user {
             $_SESSION['logged_in'] = true;
             $query = "UPDATE users SET password = ?, password_reset_token = NULL WHERE password_reset_token = ?";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(1, password_hash($password, PASSWORD_DEFAULT));
+            $password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt->bindParam(1, $password);
             $stmt->bindParam(2, $token);
             return $stmt->execute();
         }
         return false;
+    }
+
+    public function setResetToken($email) {
+        $query = "UPDATE users SET password_reset_token = ? WHERE email = ?";
+        $stmt = $this->conn->prepare($query);
+        $token = 1;//bin2hex(random_bytes(50));
+        $stmt->bindParam(1, $token);
+        $stmt->bindParam(2, $email);
+        $stmt->execute();
+        return $token;
+    }
+    public function passwordValidation($password) {
+        //contains uppercase, minimum 3 characters and one number
+        return preg_match('/^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{3,}$/', $password);
+    }
+    public function sanitize($data) {
+        $cleaned = htmlspecialchars($dara, ENT_QUOTES, 'UTF-8');
+        
+        if (!preg_match('/^[a-zA-Z0-9_-]{3,20}$/', $dara)) {
+            return false;
+        }
+        
+        return $cleaned;
+    }
+    public function changeInfo($data) {
+        $query = "UPDATE users SET ";
+
+        if(isset($data->password)) {
+            if(!$this->passwordValidation($data->password))
+                return ["status" => "error", "message" => "Password must contain at least 3 characters, one uppercase letter and one number"];
+            $query .= "password = ?, ";
+        }
+        if(isset($data->email)) {
+            if($this->emailExists($data->email) || !filter_var($data->email, FILTER_VALIDATE_EMAIL))
+                return ["status" => "error", "message" => "Email already exists or invalid"];
+            $query .= "email = ?, ";
+        }
+        if(isset($data->username)) {
+            $username = $this->sanitize($data->username);
+            if(!$username || $this->userExists($data->username))
+                return ["status" => "error", "message" => "Username already exists or invalid"];
+            $query .= "username = ?, ";
+        }
+        $query = substr($query, 0, -2);
+        $query .= " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $i = 1;
+        if(isset($data->password)) {
+            $pass = password_hash($data->password, PASSWORD_DEFAULT);
+            $stmt->bindParam($i, $pass);
+            $i++;
+        }
+        if(isset($data->email)) {
+            $stmt->bindParam($i, $data->email);
+            $i++;
+        }
+        if(isset($data->username)) {
+            $stmt->bindParam($i, $username);
+            $i++;
+        }
+        $stmt->bindParam($i, $_SESSION['user_id']);
+        if ($stmt->execute())
+            return ["status" => "success", "message" => "User info updated"];
+        return ["status" => "error", "message" => "Failed to update user info"];
     }
 }

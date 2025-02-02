@@ -17,14 +17,14 @@
             </ul>
         </nav>
         <div id="modify" style="display: none;">
-            <form>
+            <form id="modify-form">
                 <label for="email">email:</label>
-                <input type="text" id="change-email" name="email" required>
+                <input type="text" id="modify-email" name="email">
                 <label for="username">username:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="modify-username" name="username">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" autocomplete="" required>
-                <button type="submit">Change info</button>
+                <input type="password" id="modify-password" name="password" autocomplete="">
+                <button type="submit">modify info</button>
             </form>
         </div>
     </header>
@@ -38,10 +38,10 @@
                 <input type="password" id="login-password" name="password" autocomplete="" required>
                 <button type="submit" onclick="login()">Login</button>
                 <button type="button" onclick="showRegister()">register</button>
-                <button type="button" onclick="showReset()">forgot password</button>
+                <button type="button" onclick="showForgot()">forgot password</button>
             </div>
         </section>
-        <section id="register" style="display: none;" class="auth-form">
+        <section id="register" styles="display: none;" class="auth-form">
             <h2>Register</h2>
             <div>
                 <label for="email">email:</label>
@@ -52,6 +52,15 @@
                 <input type="password" id="register-password" name="password" autocomplete="" required>
                 <button type="submit" onclick="register()">Register</button>
                 <button type="button" onclick="showLogin()">login</button>
+            </div>
+        </section>
+        <section id="forgot" class="auth-form" styles="display: none;">
+            <h2>Reset password</h2>
+            <div>
+                <label for="email">email:</label>
+                <input type="text" id="forgot-email" name="email" required>
+                <button type="submit" onclick="showLogin()">Login</button>
+                <button type="button" onclick="forgotPassword()">send email</button>
             </div>
         </section>
         <section id="message" class="auth-form" style="display: none;">
@@ -81,6 +90,7 @@
     <footer>
         <p>&copy; 2020</p>
     </footer>
-    <script src="../js/auth.js"></script>
+    <script src="../js/auth.js">
+    </script>
 </body>
 </html>

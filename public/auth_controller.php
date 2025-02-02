@@ -14,13 +14,16 @@ class AuthController {
 
     public function register($data) {
         $this->user->email = $data->email;
-        $this->user->username = $data->username;
+        $this->user->username = $this->user->sanitize($data->username);
         $this->user->password = $data->password;
-        if($this->user->emailExists()) {
-            return ["status" => "error", "message" => "Email already exists"];
+        if($this->user->emailExists() ||  !filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
+            return ["status" => "error", "message" => "Email already exists or invalid"];
         }
-        if ($this->user->userExists()) {
-            return ["status" => "error", "message" => "Username already exists"];
+        if (!$this->user->username || $this->user->userExists($data->username)) {
+            return ["status" => "error", "message" => "Username already exists or invalid"];
+        }
+        if(!$this->user->passwordValidation($data->password)) {
+            return ["status" => "error", "message" => "Password must contain at least 3 characters, one uppercase letter and one number"];
         }
         if($this->user->create()) {
             $to = $this->user->email;
@@ -58,12 +61,37 @@ class AuthController {
     }
     public function login($data) {
         $this->user->username = $data->username;
-        if(!$this->user->userExists()) {
+        if(!$this->user->userExists($data->username)) {
             return ["status" => "error", "message" => "User does not exist or was not confirmed."];
         }
         if($this->user->verifyPassword($data->password)) {
             return ["status" => "success", "message" => "Login successful"];
         }
         return ["status" => "error", "message" => "Invalid password"];
+    }
+    public function forgotPassword($data) {
+        if($data && isset($data->email) && $this->user->emailExists($data->email)) {
+            $token = $this->user->setResetToken($data->email);
+            $to = $data->email;
+            $subject = "Password Reset";
+            $message = "<html><body>";
+            $message .= "<p>Please reset your password by clicking this link:</p>";
+            $message .= "<p><a href='http://localhost:8080/reset?token=" . $token . "'>Click here to reset your password</a></p>";
+            $message .= "</body></html>";
+            $headers = array(
+                'From' => 'Camagru <camagru.egerv@gmail.com>',
+                'Reply-To' => 'Camagru <camagru.egerv@gmail.com>',
+                'MIME-Version' => '1.0',
+                'Content-Type' => 'text/html; charset=UTF-8',
+            );
+            // mail($to, $subject, $message, $headers);
+            return true;
+        }
+        return false;
+    }
+    public function changeInfo($data) {
+        if(!$data)
+            return ["status" => "error", "message" => "No data provided"];
+        return $this->user->changeInfo($data);
     }
 }

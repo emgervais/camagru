@@ -1,11 +1,11 @@
-[ ]Docker
-[ ]Nginx
+[x]Docker
+[x]Nginx
 [ ]Mobile friendly
-[ ]Account creation
-[ ]Email confirmation
-[ ]Disconnect button
-[ ]password reset email
-[ ]modify username, email and password
+[x]Account creation
+[x]Email confirmation
+[x]Disconnect button
+[x]password reset email
+[x]modify username, email and password
 [ ]main display all photos
 [ ]Order by date of creation
 [ ]like and comment photo

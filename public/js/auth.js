@@ -1,3 +1,15 @@
+document.addEventListener('DOMContentLoaded', function() {
+    showLogin();
+    isLogged();  
+    document.getElementById('modify-form').addEventListener('submit', changeInfo);
+});
+
+
+
+
+
+
+
 function isLogged() {
     fetch('/api/isLogged', {
         method: 'GET',
@@ -7,15 +19,12 @@ function isLogged() {
 }    }).then(response => {
         return response.json();
     }).then(data => {
-        console.log('Response:', data);
         if (data.logged) {
             hideLogin();
         }
     })
     window.history.pushState({}, '', '/');
 }
-isLogged();  
-
 function logout() {
     fetch('/api/logout', {
         method: 'GET',
@@ -26,7 +35,6 @@ function logout() {
     }).then(response => {
         return response.json();
     }).then(data => {
-        console.log('Response:', data);
         if (data.logged) {
             alert('Logout failed');
         }
@@ -38,6 +46,7 @@ function logout() {
 function showLogin() {
     document.getElementById('login').style.display = 'flex';
     document.getElementById('register').style.display = 'none';
+    document.getElementById('forgot').style.display = 'none';
 }
 
 function showRegister() {
@@ -45,9 +54,11 @@ function showRegister() {
     document.getElementById('register').style.display = 'flex';
 }
 
-function hideLogin() {
+function showForgot() {
     document.getElementById('login').style.display = 'none';
-    document.getElementById('register').style.display = 'none';
+    document.getElementById('forgot').style.display = 'flex';
+}
+function hideLogin() {
     document.getElementById('overlay').style.display = 'none';
 }
 function showModify() {
@@ -114,5 +125,56 @@ function register() {
             return;
         }
         alert('Registration successfull, please check your email to confirm');
+    })
+}
+
+function forgotPassword() {
+    const email = document.getElementById('forgot-email').value;
+
+    if (!email) {    
+        alert('Please fill out all fields');
+        return;
+    }
+    fetch('/api/forgotPassword', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({email: email}),
+        credentials: 'same-origin',
+        mode: 'cors',
+    }).then(response => {
+        if (!response.ok) {
+            alert('failed to send email');
+            return;
+        }
+        alert('Email sent, please check your email');
+    })
+}
+
+function changeInfo(e) {
+    e.preventDefault();
+    const email = document.getElementById('modify-email').value;
+    const username = document.getElementById('modify-username').value;
+    const password = document.getElementById('modify-password').value;
+
+    fetch('/api/changeInfo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({email: email, username: username, password: password}),
+        credentials: 'same-origin',
+        mode: 'cors',
+    }).then(response => {
+        if (response.ok) {
+            alert('changes saved');
+            return;
+        }
+        return response.json();
+    }).then(data => {
+        alert(data.message);
     })
 }
