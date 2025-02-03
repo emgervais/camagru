@@ -11,9 +11,11 @@
             <ul>
                 <li><a href="#">Feed</a></li>
                 <li><a href="post.html">Post</a></li>
-                <li><a onclick="showModify()">Change info</a></li>
                 <li><a onclick="showLogin()"><i class="fa-regular fa-bell"></i></a></li>
-                <li><button onclick="logout()">logout</button></li>
+                <li class="if-logged"><a onclick="showModify()">Change info</a></li>
+                <li class="if-logged"><button onclick="logout()">logout</button></li>
+                <li class="if-not-logged"><button onclick="showLogin()">login</button></li>
+                <li class="if-not-logged"><button onclick="showRegister()">register</button></li>
             </ul>
         </nav>
         <div id="modify" style="display: none;">
@@ -28,8 +30,8 @@
             </form>
         </div>
     </header>
-    <div id="overlay" styles="display: none;">
-        <section id="login" class="auth-form">
+    <div id="overlay" class="overlay">
+        <section id="login" styles="display: none;" class="auth-form">
             <h2>Login</h2>
             <div>
                 <label for="username">username:</label>
@@ -69,22 +71,19 @@
         </section>
     </div>
     <main id="main-feed">
+        <div id="comments-overlay" class="overlay">
+            <div class="comments">
+                <h2>Comments</h2>
+                <div id="comments"></div>
+                <form id="comment-form">
+                    <label for="comment">Comment:</label>
+                    <input type="text" id="comment" name="comment">
+                    <button type="submit">comment</button>
+                </form>
+            </div>
+        </div>
         <h1>Feed</h1>
         <section id="feed">
-            <div class="post">
-                <img src="../img/egervais.jpg" alt="placeholder">
-                <div>
-                    <i class="fa-regular fa-thumbs-up"></i>
-                    <a>comment</a>
-                </div>
-            </div>
-            <div class="post">
-                <img src="../img/egervais.jpg" alt="placeholder">
-                <div>
-                    <i class="fa-regular fa-thumbs-up">10</i>
-                    <a>comment</a>
-                </div>
-            </div>
         </section>
     </main>
     <footer>

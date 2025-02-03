@@ -114,6 +114,50 @@ if ($uri[1] === 'api') {
                 echo json_encode($response);
             }
             break;
+        case 'posts':
+            $response = $auth->getPosts();
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response['data']);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
+        case 'like':
+            $response = $auth->like($data);
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response['message']);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
+        case 'getComment':
+            $response = $auth->comment($data);
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response['comments']);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
+        case 'sendComment':
+            $response = $auth->sendComment($data);
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response['message']);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
         default:
             http_response_code(404);
             echo json_encode(["message" => "Endpoint not found"]);

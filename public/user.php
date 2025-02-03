@@ -22,10 +22,7 @@ class user {
                 SET username=:username, 
                     email=:email, 
                     password=:password,
-                    verification_token=:token,
-                    notification=1,
-                    is_verified=0,
-                    password_reset_token=NULL";
+                    verification_token=:token";
 
         $stmt = $this->conn->prepare($query);
 

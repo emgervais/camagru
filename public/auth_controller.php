@@ -13,10 +13,12 @@ class AuthController {
     }
 
     public function register($data) {
+        if(!$data || !isset($data->email) || !isset($data->username) || !isset($data->password))
+            return ["status" => "error", "message" => "Missing data"];
         $this->user->email = $data->email;
         $this->user->username = $this->user->sanitize($data->username);
         $this->user->password = $data->password;
-        if($this->user->emailExists() ||  !filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
+        if($this->user->emailExists($data->email) ||  !filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
             return ["status" => "error", "message" => "Email already exists or invalid"];
         }
         if (!$this->user->username || $this->user->userExists($data->username)) {
@@ -93,5 +95,46 @@ class AuthController {
         if(!$data)
             return ["status" => "error", "message" => "No data provided"];
         return $this->user->changeInfo($data);
+    }
+    public function getPosts() {
+        $query = "SELECT * FROM posts";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute() ? ["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)] : ["status" => "error", "message" => "Failed to get posts"];
+    }
+    public function like($data) {
+        if (!isset($_SESSION['user_id'])) {
+            return ["status" => "error", "message" => "Please login to like posts"];
+        }
+        if (!$data || !isset($data->id) || !is_numeric($data->like))
+            return ["status" => "error", "message" => "Missing data"];
+        $query = $data->like ? "UPDATE posts SET likes = likes + 1 WHERE id = ?" : "UPDATE posts SET likes = likes - 1 WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $data->id);
+        return $stmt->execute() ? ["status" => "success", "message" => "Post liked"] : ["status" => "error", "message" => "Failed to like post"];
+    }
+    public function comment($data) {
+        if (!isset($_SESSION['user_id'])) {
+            return ["status" => "error", "message" => "Please login to comment"];
+        }
+        if (!$data || !isset($data->id))
+            return ["status" => "error", "message" => "Missing data"];
+        $query = "select * from comments where post_id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $data->id);
+        return $stmt->execute() ? ["status" => "success", "comments" => $stmt->fetchAll(PDO::FETCH_ASSOC)] : ["status" => "error", "message" => "Failed fetch comments"];
+    }
+    public function sendComment($data) {
+        if (!isset($_SESSION['user_id'])) {
+            return ["status" => "error", "message" => "Please login to comment"];
+        }
+        if (!$data || !isset($data->id) || !isset($data->comment))
+            return ["status" => "error", "message" => "Missing data"];
+        $query = "INSERT INTO comments (post_id, user_id, comment, username) VALUES (?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $data->id);
+        $stmt->bindParam(2, $_SESSION['user_id']);
+        $stmt->bindParam(3, $data->comment);
+        $stmt->bindParam(4, $_SESSION['username']);
+        return $stmt->execute() ? ["status" => "success", "message" => "Comment added"] : ["status" => "error", "message" => "Failed to add comment"];
     }
 }
