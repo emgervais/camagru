@@ -17,11 +17,12 @@ class AuthController {
             return ["status" => "error", "message" => "Missing data"];
         $this->user->email = $data->email;
         $this->user->username = $this->user->sanitize($data->username);
+        echo $data->username;
         $this->user->password = $data->password;
         if($this->user->emailExists($data->email) ||  !filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
             return ["status" => "error", "message" => "Email already exists or invalid"];
         }
-        if (!$this->user->username || $this->user->userExists($data->username)) {
+        if (!$this->user->username || $this->user->userExists($this->user->username)) {
             return ["status" => "error", "message" => "Username already exists or invalid"];
         }
         if(!$this->user->passwordValidation($data->password)) {
@@ -96,9 +97,11 @@ class AuthController {
             return ["status" => "error", "message" => "No data provided"];
         return $this->user->changeInfo($data);
     }
-    public function getPosts() {
-        $query = "SELECT * FROM posts";
+    public function getPosts($page) {
+        $offset = ($page - 1) * 10;
+        $query = "SELECT * FROM posts ORDER BY creation_date DESC LIMIT 10 OFFSET :offset";
         $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         return $stmt->execute() ? ["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)] : ["status" => "error", "message" => "Failed to get posts"];
     }
     public function like($data) {
@@ -129,12 +132,46 @@ class AuthController {
         }
         if (!$data || !isset($data->id) || !isset($data->comment))
             return ["status" => "error", "message" => "Missing data"];
-        $query = "INSERT INTO comments (post_id, user_id, comment, username) VALUES (?, ?, ?, ?)";
+        try {
+            $query = "INSERT INTO comments (post_id, user_id, comment, username) VALUES (?, ?, ?, ?)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $data->id);
+            $stmt->bindParam(2, $_SESSION['user_id']);
+            $stmt->bindParam(3, $data->comment);
+            $stmt->bindParam(4, $_SESSION['username']);
+            $response = $stmt->execute() ? ["status" => "success", "message" => "Comment added", "username" => $_SESSION['username']] : ["status" => "error", "message" => "Failed to add comment"];
+        } catch (PDOException $e) {
+            $response = ["status" => "error", "message" => "Post couldnt be found"];
+        }
+        if ($response['status'] === "error")
+            return $response;
+        sendCommentMail($data->id);
+        return $response;
+    }
+    private function sendCommentMail($id) {
+        $query = "SELECT user_id FROM posts WHERE id = ?";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $data->id);
-        $stmt->bindParam(2, $_SESSION['user_id']);
-        $stmt->bindParam(3, $data->comment);
-        $stmt->bindParam(4, $_SESSION['username']);
-        return $stmt->execute() ? ["status" => "success", "message" => "Comment added"] : ["status" => "error", "message" => "Failed to add comment"];
+        $stmt->bindParam(1, $id);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $query = "SELECT email, notification FROM users WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $result['user_id']);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if !$result['notification']
+            return;
+        $to = $result['email'];
+        $subject = "New Comment";
+        $message = "<html><body>";
+        $message .= "<p>You have a new comment on your post</p>";
+        $message .= "</body></html>";
+        $headers = array(
+            'From' => 'Camagru <camagru.egerv@gmail.com>',
+            'Reply-To' => 'Camagru <camagru.egerv@gmail.com>',
+            'MIME-Version' => '1.0',
+            'Content-Type' => 'text/html; charset=UTF-8',
+        );
+        // mail($to, $subject, $message, $headers);
     }
 }

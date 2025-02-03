@@ -9,9 +9,9 @@
 [x]main display all photos
 [x]Order by date of creation
 [x]like and comment photo
-[ ]send email when comment
+[x]send email when comment
 [x]connected to like and comment
-[ ]infinite scroll?
+[x]infinite scroll?
 
 edit page
 =======================

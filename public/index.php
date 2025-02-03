@@ -115,7 +115,11 @@ if ($uri[1] === 'api') {
             }
             break;
         case 'posts':
-            $response = $auth->getPosts();
+            if(!isset($_GET['page'])) {
+                http_response_code(401);
+                echo json_encode(['status' => 'error', ]);
+            }
+            $response = $auth->getPosts(intval($_GET['page']));
             if ($response['status'] === "success") {
                 http_response_code(200);
                 echo json_encode($response['data']);
@@ -151,7 +155,7 @@ if ($uri[1] === 'api') {
             $response = $auth->sendComment($data);
             if ($response['status'] === "success") {
                 http_response_code(200);
-                echo json_encode($response['message']);
+                echo json_encode($response);
             }
             else {
                 http_response_code(401);

@@ -190,9 +190,9 @@ class user {
         return preg_match('/^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{3,}$/', $password);
     }
     public function sanitize($data) {
-        $cleaned = htmlspecialchars($dara, ENT_QUOTES, 'UTF-8');
-        
-        if (!preg_match('/^[a-zA-Z0-9_-]{3,20}$/', $dara)) {
+        $cleaned = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        echo $cleaned;
+        if (!preg_match('/^[a-zA-Z0-9_-]{1,20}$/', $cleaned)) {
             return false;
         }
         
