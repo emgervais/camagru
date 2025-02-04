@@ -1,6 +1,5 @@
 [x]Docker
 [x]Nginx
-[ ]Mobile friendly
 [x]Account creation
 [x]Email confirmation
 [x]Disconnect button
@@ -12,15 +11,17 @@
 [x]send email when comment
 [x]connected to like and comment
 [x]infinite scroll?
+[x]Mobile friendly
+[ ]deactivate notification
+[ ]user can delete img
 
 edit page
 =======================
-[ ]only for connected
+[x]only for connected
 [ ]main preview of webcam
-[ ]additions
-[ ]button to take picture
-[ ]side all previous photo taken
-[ ]cant press button if no superposition selected
+[x]additions
+[x]button to take picture
+[x]side all previous photo taken
+[x]cant press button if no superposition selected
 [ ]creation of image serverside
-[ ]upload img
-[ ]user can delete img
+[x]upload img

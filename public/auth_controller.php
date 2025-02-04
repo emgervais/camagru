@@ -105,7 +105,7 @@ class AuthController {
         return $stmt->execute() ? ["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)] : ["status" => "error", "message" => "Failed to get posts"];
     }
     public function like($data) {
-        if (!isset($_SESSION['user_id'])) {
+        if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
             return ["status" => "error", "message" => "Please login to like posts"];
         }
         if (!$data || !isset($data->id) || !is_numeric($data->like))
@@ -137,7 +137,8 @@ class AuthController {
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1, $data->id);
             $stmt->bindParam(2, $_SESSION['user_id']);
-            $stmt->bindParam(3, $data->comment);
+            $comment = htmlspecialchars($data->comment, ENT_QUOTES, 'UTF-8');
+            $stmt->bindParam(3, $comment);
             $stmt->bindParam(4, $_SESSION['username']);
             $response = $stmt->execute() ? ["status" => "success", "message" => "Comment added", "username" => $_SESSION['username']] : ["status" => "error", "message" => "Failed to add comment"];
         } catch (PDOException $e) {
@@ -159,7 +160,7 @@ class AuthController {
         $stmt->bindParam(1, $result['user_id']);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        if !$result['notification']
+        if (!$result['notification'])
             return;
         $to = $result['email'];
         $subject = "New Comment";
@@ -173,5 +174,25 @@ class AuthController {
             'Content-Type' => 'text/html; charset=UTF-8',
         );
         // mail($to, $subject, $message, $headers);
+    }
+    private function mergeImg($img, $add) {
+        $img = imagecreatefromstring(base64_decode($img));
+        $filter = imagecreatefromstring(base64_decode($filter));
+        imagecopy($img, $filter, 0, 0, 0, 0, 640, 480);
+        ob_start();
+        imagepng($img);
+        $image = ob_get_contents();
+        ob_end_clean();
+        return base64_encode($image);
+    }
+    public function publish($data) {
+        $img = $this->mergeImg($data['dest'], $data['addons']);
+        if (!$img)
+            return ["status" => "error", "message" => "Failed to merge images"];
+        $query = "INSERT INTO posts (user_id, image) VALUES (?, ?)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $_SESSION['user_id']);
+        $stmt->bindParam(2, $img);
+        return $stmt->execute() ? ["status" => "success", "message" => "Post published"] : ["status" => "error", "message" => "Failed to publish post"];
     }
 }

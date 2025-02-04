@@ -49,7 +49,8 @@ function sendComment(e) {
         document.getElementById('comments').appendChild(div);
         document.getElementById('comment').value = '';
     }
-    ).catch()
+    ).catch(e)
+        return;
 }
 function hideComments(e) {
     if (e.target.id != 'comments-overlay') return;
@@ -336,4 +337,19 @@ function changeInfo(e) {
     }).then(data => {
         alert(data.message);
     })
+}
+function getGallery() {
+    fetch('/api/gallery').then(response => {
+        if (!response.ok) {
+            alert('Please connect to access Gallery');
+            throw new Error('help');
+        }
+        return response.text();
+    }).then(response => {
+        document.body.innerHTML = response;
+        const postScript = document.createElement('script');
+        postScript.src = '../js/post.js';
+        document.body.appendChild(postScript);
+    }).catch(Error)
+        return;
 }

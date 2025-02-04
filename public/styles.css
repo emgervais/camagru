@@ -121,26 +121,38 @@ header nav ul {
 
 #img-container {
     width: 100%;
-    height: 100%;
+    height: 50%;
     display: flex;
     justify-content: center;
 }
 
-#main-img {
-    position:relative;
-    z-index: 1;
-    width: 50%;
-    height:auto;
+#gallery-addons {
+    display: flex;
+    width: 100%;
+    height: 50%;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-y: scroll;
 }
-#add-img {
+.addons {
+    height: 25%;
+    width: auto;
+}
+#main-img {
+    position: relative;
+    z-index: 1;
+    width: fit-content;
+    height: auto;
+    max-width: 100%;
+}
+.add-img {
     position: absolute;
-    width: 25%;
+    width: 10%;
     z-index: 2;
-    /* background-color: black; */
 }
 #gallery {
     border: black 1px solid;
-    width: 100%;    
+    width: 70%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -149,16 +161,21 @@ header nav ul {
 
 #history {
     border: black 1px solid;
-    width: fit-content;
+    width: 30%;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    flex-shrink: 0;
 }
 
 #history div{
     position: relative;
+    width: 100%;
 }
+#history div img{
+    width: 100%;
+    height: auto;
+}
+
 
 .delete-img {
     position:absolute;
@@ -173,6 +190,18 @@ header nav ul {
     margin: 5px;
 }
 
+.publish-buton {
+    position:absolute;
+    z-index: 2;
+    top: 5px;
+    left: 5px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 5px;
+}
 .hidden {
     display: none;
 }

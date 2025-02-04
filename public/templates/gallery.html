@@ -1,0 +1,40 @@
+
+    <header>
+        <nav>
+            <ul>
+                <li><a onclick="window.location.href='/';">Feed</a></li>
+                <li><a href="#">Post</a></li>
+                <li><a onclick="logout()">disconnect</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main id="post-main">
+        <section id="gallery">
+            <h2>Gallery</h2>
+            <div id="img-container">
+            </div>
+            <div class="gallery-footer">
+                <button onclick="mergeImages()">save</button>
+                <input type="file" id="file" accept="image/*" style="display: none">
+                <button onclick="upload()">load an image</button>
+            </div>
+            <div id="gallery-addons">
+                <img data-id="1" class="addons" src="../img/cat.png">
+                <img data-id="2" class="addons" src="../img/firework.png">
+                <img data-id="3" class="addons" src="../img/cat.png">
+                <img data-id="4" class="addons" src="../img/cat.png">
+                <img data-id="5" class="addons" src="../img/cat.png">
+                <img data-id="6" class="addons" src="../img/cat.png">
+                <img data-id="7" class="addons" src="../img/cat.png">
+                <img data-id="8" class="addons" src="../img/cat.png">
+                <img data-id="9" class="addons" src="../img/cat.png">
+                <img data-id="10" class="addons" src="../img/cat.png">
+                <img data-id="11" class="addons" src="../img/cat.png">
+            </div>
+        </section>
+        <section id="history">
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2020</p>
+    </footer>

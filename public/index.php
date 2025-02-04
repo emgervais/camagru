@@ -61,6 +61,7 @@ if ($uri[1] === 'api') {
                     throw new Exception('Session not started');
                 }
                 session_destroy();
+                $_SESSION = [];
                 echo json_encode([
                     "message" => "Logged out",
                     "logged" => false
@@ -153,6 +154,41 @@ if ($uri[1] === 'api') {
             break;
         case 'sendComment':
             $response = $auth->sendComment($data);
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
+        case 'gallery':
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
+                    http_response_code(401);
+                    echo json_encode(["message" => "Please login to view gallery"]);
+                    break;
+                }
+                $filePath = dirname(__DIR__) . '/public/templates/gallery.html';
+                if (file_exists($filePath)) {
+                    header('Content-Type: text/html');
+                    readfile($filePath);
+                }
+            }
+            break;
+        case 'publish':
+            if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode(["message" => "Please login to publish posts"]);
+                break;
+            }
+            if(!isset($_POST) || !isset($_POST['dest']) || !isset($_POST['addons'])) {
+                http_response_code(401);
+                echo json_encode(["message" => "Please provide the right data"]);
+                break;
+            }
+            $response = $auth->publish($_POST);
             if ($response['status'] === "success") {
                 http_response_code(200);
                 echo json_encode($response);
