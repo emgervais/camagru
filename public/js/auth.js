@@ -149,6 +149,7 @@ function loadPosts() {
                 <img src="${post.image_path}" alt="post image">
                 <div>
                     <i class="fa-regular fa-heart likes" data-id="${post.id}">${post.likes}</i>
+                    <button onclick="deletePost(${post.id})">delete</button>
                     <a data-id="${post.id}" class="comment-button">comment</a>
                 </div>`;
                 el.appendChild(div);
@@ -350,6 +351,40 @@ function getGallery() {
         const postScript = document.createElement('script');
         postScript.src = '../js/post.js';
         document.body.appendChild(postScript);
+    }).catch(Error)
+        return;
+}
+function deletePost(id) {
+    fetch('/api/delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({id: id}),
+    }).then(response => {
+        if (!response.ok) {
+            return response.text().then(errorMessage => {
+                alert(errorMessage);
+                throw new Error(errorMessage);
+            });
+        }
+        return response.json();
+    }).then(data => {
+        alert(data.message);
+        window.location.href = '/';
+    }).catch(e)
+        return;
+}
+function notification() {
+    fetch('/api/notification').then(response => {
+        if (!response.ok) {
+            alert('problem');
+            throw new Error('help');
+        }
+        return response.text();
+    }).then(response => {
+        alert(response);
     }).catch(Error)
         return;
 }

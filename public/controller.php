@@ -1,7 +1,7 @@
 <?php
 
 include "user.php";
-class AuthController {
+class Controller {
     private $conn;
     public User $user;
 
@@ -15,23 +15,20 @@ class AuthController {
     public function register($data) {
         if(!$data || !isset($data->email) || !isset($data->username) || !isset($data->password))
             return ["status" => "error", "message" => "Missing data"];
-        $this->user->email = $data->email;
-        $this->user->username = $this->user->sanitize($data->username);
-        echo $data->username;
-        $this->user->password = $data->password;
+        $data->$username = $this->user->sanitize($data->username);
         if($this->user->emailExists($data->email) ||  !filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
             return ["status" => "error", "message" => "Email already exists or invalid"];
         }
-        if (!$this->user->username || $this->user->userExists($this->user->username)) {
+        if (!$data->username || $this->user->userExists($data->username)) {
             return ["status" => "error", "message" => "Username already exists or invalid"];
         }
         if(!$this->user->passwordValidation($data->password)) {
             return ["status" => "error", "message" => "Password must contain at least 3 characters, one uppercase letter and one number"];
         }
-        if($this->user->create()) {
-            $to = $this->user->email;
+        $token = $this->user->create($data->$username, $data->$email, $data->$password);
+        if($token) {
+            $to = $data->email;
             $subject = "Email Verification";
-            $token = $this->user->verification_token;
             $message = "<html><body>";
             $message .= "<p>Please verify your email by clicking this link:</p>";
             $message .= "<p><a href='http://localhost:8080/api/verify?token=" . $token . "'>Click here to verify your email</a></p>";
@@ -43,7 +40,7 @@ class AuthController {
                 'Content-Type' => 'text/html; charset=UTF-8',
             );
             
-            // mail($to, $subject, $message, $headers);
+            mail($to, $subject, $message, $headers);
             return ["status" => "success", "message" => "email sent"];
         }
         return ["status" => "error", "message" => "Failed to create user"];
@@ -63,11 +60,10 @@ class AuthController {
         return false;
     }
     public function login($data) {
-        $this->user->username = $data->username;
         if(!$this->user->userExists($data->username)) {
             return ["status" => "error", "message" => "User does not exist or was not confirmed."];
         }
-        if($this->user->verifyPassword($data->password)) {
+        if($this->user->verifyPassword($data->username, $data->password)) {
             return ["status" => "success", "message" => "Login successful"];
         }
         return ["status" => "error", "message" => "Invalid password"];
@@ -173,26 +169,81 @@ class AuthController {
             'MIME-Version' => '1.0',
             'Content-Type' => 'text/html; charset=UTF-8',
         );
-        // mail($to, $subject, $message, $headers);
+        mail($to, $subject, $message, $headers);
     }
-    private function mergeImg($img, $add) {
-        $img = imagecreatefromstring(base64_decode($img));
-        $filter = imagecreatefromstring(base64_decode($filter));
-        imagecopy($img, $filter, 0, 0, 0, 0, 640, 480);
-        ob_start();
-        imagepng($img);
-        $image = ob_get_contents();
-        ob_end_clean();
-        return base64_encode($image);
+    private function mergeImg($img, $add, $path) {
+        $decode = base64_decode(substr($img, strpos($img, ',') + 1));
+        $img = imagecreatefromstring($decode);
+        if (!$img)
+            return false;
+        for ($i = 0; $i < count($add); $i++) {
+            $imgpath = dirname(__DIR__) . '/public' . parse_url($add[$i]->src)['path'];
+            $image_info = getimagesize($imgpath);
+            if (!$image_info)
+                return false;
+            switch ($image_info[2]) {
+                case IMAGETYPE_JPEG:
+                    $addon = imagecreatefromjpeg($imgpath);
+                    break;
+                case IMAGETYPE_PNG:
+                    $addon = imagecreatefrompng($imgpath);
+                    break;
+                case IMAGETYPE_GIF:
+                    $addon = imagecreatefromgif($imgpath);
+                    break;
+                default:
+                    return false;
+            }
+            $scaled = imagescale($addon, $add[$i]->width, $add[$i]->height);
+            if (!imagecopy($img, $scaled, $add[$i]->left, $add[$i]->top, 0, 0, $add[$i]->width, $add[$i]->height)) {
+                imagedestroy($addon);
+                return false;
+            }
+            imagedestroy($addon);
+        }
+        imagepng($img, $path, 9);
+        return true;
     }
+
     public function publish($data) {
-        $img = $this->mergeImg($data['dest'], $data['addons']);
+        $name = $_SESSION['username'] . '_' . time() . '.png';
+        $path = dirname(__DIR__) . '/public/img/' . $name;
+        $img = $this->mergeImg($data['dest'], json_decode($data['addons']), $path);
         if (!$img)
             return ["status" => "error", "message" => "Failed to merge images"];
-        $query = "INSERT INTO posts (user_id, image) VALUES (?, ?)";
+        $query = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $_SESSION['user_id']);
-        $stmt->bindParam(2, $img);
+        $p = 'img/' . $name;
+        $stmt->bindParam(2, $p);
         return $stmt->execute() ? ["status" => "success", "message" => "Post published"] : ["status" => "error", "message" => "Failed to publish post"];
+    }
+
+    public function delete($id) {
+        $querry = "SELECT user_id, image_path FROM posts WHERE id = ?";
+        $stmt = $this->conn->prepare($querry);
+        $stmt->bindParam(1, $id);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result['user_id'] != $_SESSION['user_id'])
+            return ["status" => "error", "message" => "You can only delete your own posts"];
+        unlink(dirname(__DIR__) . '/public/' . $result['image_path']);
+        $querry = "DELETE FROM posts WHERE id = ?";
+        $stmt = $this->conn->prepare($querry);
+        $stmt->bindParam(1, $id);
+        return $stmt->execute() ? ["status" => "success", "message" => "Post deleted"] : ["status" => "error", "message" => "Failed to delete post"];
+    }
+
+    public function setNotifications() {
+        $query = "SELECT notification from users WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $_SESSION['user_id']);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $query = "UPDATE users SET notification = !notification WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $_SESSION['user_id']);
+        $turn = $result['notification'] ? "off" : "on";
+        return $stmt->execute() ? ["status" => "success", "message" => "Notification status is now " . $turn] : ["status" => "error", "message" => "Failed to change notification status"];
     }
 }

@@ -11,7 +11,7 @@
             <ul>
                 <li><a href="#">Feed</a></li>
                 <li><a onclick="getGallery()">Gallery</a></li>
-                <li><a onclick="showLogin()"><i class="fa-regular fa-bell"></i></a></li>
+                <li class="if-logged"><a onclick="notification()"><i class="fa-regular fa-bell"></i></a></li>
                 <li class="if-logged"><a onclick="showModify()">Change info</a></li>
                 <li class="if-logged"><button onclick="logout()">logout</button></li>
                 <li class="if-not-logged"><button onclick="showLogin()">login</button></li>

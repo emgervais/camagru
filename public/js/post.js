@@ -168,18 +168,18 @@ function mergeImages() {
         width = mainImg.videoWidth;
         height = mainImg.videoHeight;
     }
-    canvas.width = width;
-    canvas.height = height;
+    const canvas2 = document.createElement('canvas');
+    canvas.width = canvas2.width = width;
+    canvas.height = canvas2.height = height;
     const addons = []
     ctx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-    const canvas2 = document.createElement('canvas');
     const main = canvas2.getContext('2d');
     main.drawImage(mainImg, 0, 0, canvas2.width, canvas2.height);
     for(let i = 0; i < overlayImg.length; i++) {
         const img = overlayImg[i];
         let top = img.offsetTop - mainImg.offsetTop;
         let left = img.offsetLeft - mainImg.offsetLeft;
-        
+        console.log(img.width, img.height);
         ctx.drawImage(img, left, top, img.width, img.height);
         addons.push({'top': top, 'left': left, 'src': img.src, 'width': img.width, 'height': img.height});
     }
@@ -193,7 +193,7 @@ function mergeImages() {
                 <button class="delete-img" data-id="${currentId}">X</button>
                 <img src="${img}" alt="Merged image">`;
     history.appendChild(div);
-    creations.push(new creation(currentId++, addons, canvas2.toDataURL('image/png')));
+    creations.push(new creation(currentId++, addons, canvas2.toDataURL('image/png', 1)));
 }
 class creation {
     constructor(id, addons, dest) {
@@ -230,8 +230,22 @@ function loadaddons(e) {
         manager.addAddon(`a${id}`, img.src);
     }
 }
-function publish(id) {
+function getBase64Dimensions(base64String) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64String;
+      img.onload = () => {
+        resolve({
+          width: img.width,
+          height: img.height
+        });
+      };
+    });
+  }
+async function publish(id) {
     const creation = creations.find(creation => creation.id === id);
+    const dimensions = await getBase64Dimensions(creation.dest);
+    console.log(dimensions);
     const formData = new FormData();
     formData.append('dest', creation.dest);
     formData.append('addons', JSON.stringify(creation.addons));

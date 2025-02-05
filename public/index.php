@@ -6,12 +6,12 @@ header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-include 'auth_controller.php';
+include 'controller.php';
 include 'db.php';
 
 $database = new Database();
 $db = $database->getConnection();
-$auth = new AuthController($db);
+$auth = new Controller($db);
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -38,21 +38,12 @@ if ($uri[1] === 'api') {
             echo json_encode($response);
             break;
         case 'isLogged':
-            try {
-                if (!isset($_SESSION)) {
-                    throw new Exception('Session not started');
-                }
-                http_response_code(200);
-                echo json_encode([
-                    "logged" => $auth->user->checkSession(),
-                    "status" => true
-                ]);
-            } catch (Exception $e) {
+            if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
                 http_response_code(500);
-                echo json_encode([
-                    "logged" => false,
-                    "status" => false,
-                ]);
+                echo json_encode(["logged" => false]);
+            } else {
+                http_response_code(200);
+                echo json_encode(["logged" => true]);
             }
             break;
         case 'logout':
@@ -192,6 +183,43 @@ if ($uri[1] === 'api') {
             if ($response['status'] === "success") {
                 http_response_code(200);
                 echo json_encode($response);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
+        case 'delete':
+            if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode(["message" => "Please login to delete posts"]);
+                break;
+            }
+            if(!isset($data) || !isset($data->id)) {
+                http_response_code(401);
+                echo json_encode(["message" => "Please provide the right data"]);
+                break;
+            }
+            $response = $auth->delete($data->id);
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response);
+            }
+            else {
+                http_response_code(401);
+                echo json_encode($response['message']);
+            }
+            break;
+        case 'notification':
+            if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode(["message" => "Please login to view notifications"]);
+                break;
+            }
+            $response = $auth->setNotifications();
+            if ($response['status'] === "success") {
+                http_response_code(200);
+                echo json_encode($response['message']);
             }
             else {
                 http_response_code(401);

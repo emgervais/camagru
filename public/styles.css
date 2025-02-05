@@ -48,7 +48,7 @@ body {
     z-index: 2;
 }
 header {
-    height: 3%;
+    height: 15%;
 }
 
 footer {
@@ -57,6 +57,8 @@ footer {
 header nav {
     display: flex;
     justify-content:right;
+    align-items: center;
+    height: 100%;
 }
 
 header nav ul {

@@ -12,16 +12,56 @@
 [x]connected to like and comment
 [x]infinite scroll?
 [x]Mobile friendly
-[ ]deactivate notification
-[ ]user can delete img
+[x]deactivate notification
+[x]user can delete img
 
 edit page
 =======================
 [x]only for connected
-[ ]main preview of webcam
+[x]main preview of webcam
 [x]additions
 [x]button to take picture
 [x]side all previous photo taken
 [x]cant press button if no superposition selected
-[ ]creation of image serverside
+[x]creation of image serverside
 [x]upload img
+
+index.php
+
+Session Initialization (Line ~2):
+[ ] Issue: Session is simply started without regenerating the session ID after login or verifying its validity.
+• Recommendation: Regenerate the session ID after a successful login to mitigate session fixation risks.
+CORS Headers (Line ~3–7):
+• Issue: The API allows any origin (Access-Control-Allow-Origin: *), which may expose the API to cross-origin attacks if not intended.
+• Recommendation: Limit allowed origins to trusted domains.
+HTTP Method Handling and Input Data (Line ~16–20):
+• Issue: The API accepts JSON input with file_get_contents("php://input") but does not thoroughly validate or sanitize the input data.
+• Recommendation: Implement proper input validation and sanitization on all inputs.
+Error Handling and Response Codes (Various Cases):
+• Issue: Some endpoints set HTTP response codes (e.g., 401) without sending detailed error messages, which might lead to ambiguity or mislead error handling in clients.
+• Recommendation: Standardize error messaging and use appropriate response codes to avoid exposing internal logic details.
+auth_controller.php
+
+Error Suppression with Ellipsis ({…}) Blocks:
+• Issue: Several security-critical validations (e.g., checking if a session exists in logout, changePassword, etc.) are omitted, leaving potential gaps.
+• Recommendation: Ensure all security checks are implemented and avoid skipping necessary validation logic.
+Input Data Handling:
+• Issue: Multiple endpoints rely on data from $data without complete sanitation.
+• Recommendation: Validate and sanitize every input field before using it in database queries or other security-critical operations.
+
+user.php
+
+Incomplete SQL in create() (Line ~10):
+• Issue: The SQL query for creating a user is incomplete and concatenates parts of the SQL string insecurely.
+• Recommendation: Use a complete prepared statement with bound parameters for all fields to avoid SQL injection.
+Password Handling in verifyPassword() (Line ~40):
+• Issue: After a successful password check, session variables are set without additional measures like session regeneration.
+• Recommendation: Regenerate the session ID upon login to reduce session fixation risks.
+changeInfo() (Line ~90):
+• Issue: The dynamic SQL built to update user info may lead to injection risks if not all input data is properly bound and validated.
+• Recommendation: Construct queries with full prepared statements and bind all parameters instead of concatenating query parts.
+db.php
+
+Error Display in getConnection() (Line ~8):
+• Issue: Catching the PDO exception and echoing the error message may leak sensitive database connection details.
+• Recommendation: Log the error securely (e.g., to a file with restricted access) and display a generic error message to the user.
