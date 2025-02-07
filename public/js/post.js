@@ -244,14 +244,12 @@ function getBase64Dimensions(base64String) {
   }
 async function publish(id) {
     const creation = creations.find(creation => creation.id === id);
-    const dimensions = await getBase64Dimensions(creation.dest);
-    console.log(dimensions);
     const formData = new FormData();
     formData.append('dest', creation.dest);
     formData.append('addons', JSON.stringify(creation.addons));
     fetch('/api/publish', {
         method: 'POST',
-        body: formData
+        body: JSON.stringify({'dest': creation.dest, 'addons':  JSON.stringify(creation.addons)})
     }).then(response => {
         return response.json();
     }).then(data => {

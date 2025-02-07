@@ -19,6 +19,10 @@ body {
     z-index: 2;
 }
 
+#modify {
+    position: absolute;
+
+}
 .overlay {
     position: fixed;
     top: 0;

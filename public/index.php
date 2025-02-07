@@ -1,30 +1,66 @@
 <?php
-session_start();
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Methods: POST, GET");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 include 'controller.php';
 include 'db.php';
-
+session_start();
 $database = new Database();
 $db = $database->getConnection();
 $auth = new Controller($db);
 
-$data = json_decode(file_get_contents("php://input"));
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = explode('/', $uri);
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && count($uri) <= 2) {
-    $indexPath = dirname(__DIR__) . '/public/templates/index.html';
-    if (file_exists($indexPath)) {
-        header('Content-Type: text/html');
-        readfile($indexPath);
+try {
+    $uri = filter_var($_SERVER['REQUEST_URI'], FILTER_SANITIZE_URL);
+    $uri = parse_url($uri, PHP_URL_PATH);
+    $uri = array_filter(explode('/', $uri));
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && count($uri) <= 1) {
+        $indexPath = realpath(dirname(__DIR__) . '/public/templates/index.html');
+        $expectedPath = realpath(dirname(__DIR__) . '/public/templates');
+        
+        if ($indexPath !== false && 
+        strpos($indexPath, $expectedPath) === 0 && 
+        pathinfo($indexPath, PATHINFO_EXTENSION) === 'html' && 
+        file_exists($indexPath)) {
+            
+            header('Content-Type: text/html; charset=UTF-8');
+            header('X-Content-Type-Options: nosniff');
+            header('X-Frame-Options: DENY');
+            
+            readfile($indexPath);
+            exit;
+        }
+    }
+} catch (Exception $e) {
+    http_response_code(404);
+    echo 'Page not found';
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    try {
+        $rawData = file_get_contents("php://input");
+        if ($rawData === false) {
+            throw new Exception("Failed to read input stream");
+        }
+        $data = json_decode($rawData, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Invalid JSON: " . json_last_error_msg());
+        }
+    
+        if ($data === null) {
+            $data = [];
+        }
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
         exit;
     }
 }
+
 if ($uri[1] === 'api') {
     switch($uri[2]) {
         case 'register':
@@ -32,20 +68,25 @@ if ($uri[1] === 'api') {
             $response['status'] === 'success' ? http_response_code(200) : http_response_code(401);
             echo json_encode($response);
             break;
+
         case 'login':
+            $_SESSION = [];
             $response = $auth->login($data);
             $response['status'] === 'success' ? http_response_code(200) : http_response_code(401);
             echo json_encode($response);
             break;
+
         case 'isLogged':
+            error_log($_SESSION['user_id']);
             if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
-                http_response_code(500);
+                http_response_code(200);
                 echo json_encode(["logged" => false]);
             } else {
                 http_response_code(200);
                 echo json_encode(["logged" => true]);
             }
             break;
+
         case 'logout':
             try {
                 if (!isset($_SESSION)) {
@@ -65,21 +106,26 @@ if ($uri[1] === 'api') {
                 ]);
             }
             break;
+
         case 'verify':
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET')
+                break;
             $token = isset($_GET['token']) ? $_GET['token'] : null;
-            $auth->verifyToken($token) ? http_response_code(201) : http_response_code(401);//maybe not correct
+            $auth->verifyToken($token) ? http_response_code(201) : http_response_code(401);
             $indexPath = dirname(__DIR__) . '/public/templates/index.html';
             if (file_exists($indexPath)) {
                 header('Content-Type: text/html');
                 readfile($indexPath);
             }
             break;
+
         case 'changePassword':
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 header('Content-Type: text/html');
                 readfile(dirname(__DIR__) . '/public/templates/reset.html');
                 exit;
             }
+
             $response = $auth->changePassword($data);
             if ($response) {
                 header('Location: /', true, 200);
@@ -89,6 +135,7 @@ if ($uri[1] === 'api') {
                 http_response_code(301);
             }
             break;
+
         case 'forgotPassword':
             $response = $auth->forgotPassword($data);
             if ($response)
@@ -106,10 +153,11 @@ if ($uri[1] === 'api') {
                 echo json_encode($response);
             }
             break;
+
         case 'posts':
-            if(!isset($_GET['page'])) {
+            if($_SERVER['REQUEST_METHOD'] !== 'GET' || !isset($_GET['page'])) {
                 http_response_code(401);
-                echo json_encode(['status' => 'error', ]);
+                echo json_encode(['status' => 'error']);
             }
             $response = $auth->getPosts(intval($_GET['page']));
             if ($response['status'] === "success") {
@@ -121,6 +169,7 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         case 'like':
             $response = $auth->like($data);
             if ($response['status'] === "success") {
@@ -132,6 +181,7 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         case 'getComment':
             $response = $auth->comment($data);
             if ($response['status'] === "success") {
@@ -143,6 +193,7 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         case 'sendComment':
             $response = $auth->sendComment($data);
             if ($response['status'] === "success") {
@@ -154,6 +205,7 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         case 'gallery':
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
@@ -168,18 +220,19 @@ if ($uri[1] === 'api') {
                 }
             }
             break;
+
         case 'publish':
-            if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
+            if (!isset($_SESSION) || !isset($_SESSION['user_id']) || !isset($_SESSION['username'])) {
                 http_response_code(401);
                 echo json_encode(["message" => "Please login to publish posts"]);
                 break;
             }
-            if(!isset($_POST) || !isset($_POST['dest']) || !isset($_POST['addons'])) {
+            if(!isset($data) || !isset($data['dest']) || !isset($data['addons'])) {
                 http_response_code(401);
                 echo json_encode(["message" => "Please provide the right data"]);
                 break;
             }
-            $response = $auth->publish($_POST);
+            $response = $auth->publish($data);
             if ($response['status'] === "success") {
                 http_response_code(200);
                 echo json_encode($response);
@@ -189,18 +242,19 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         case 'delete':
             if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
                 http_response_code(401);
                 echo json_encode(["message" => "Please login to delete posts"]);
                 break;
             }
-            if(!isset($data) || !isset($data->id)) {
+            if(!isset($data) || !isset($data['id'])) {
                 http_response_code(401);
                 echo json_encode(["message" => "Please provide the right data"]);
                 break;
             }
-            $response = $auth->delete($data->id);
+            $response = $auth->delete($data['id']);
             if ($response['status'] === "success") {
                 http_response_code(200);
                 echo json_encode($response);
@@ -210,6 +264,7 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         case 'notification':
             if (!isset($_SESSION) || !isset($_SESSION['user_id'])) {
                 http_response_code(401);
@@ -226,6 +281,7 @@ if ($uri[1] === 'api') {
                 echo json_encode($response['message']);
             }
             break;
+
         default:
             http_response_code(404);
             echo json_encode(["message" => "Endpoint not found"]);

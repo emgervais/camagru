@@ -19,7 +19,9 @@ class user {
         $stmt->bindParam(2, $email);
         $stmt->bindParam(3, $password);
         $stmt->bindParam(4, $verification_token);
-        return $stmt->execute();
+        if(!$stmt->execute())
+            return 0;
+        return $verification_token;
     }
 
     public function emailExists($email) {
@@ -94,7 +96,6 @@ class user {
         $stmt->bindParam(1, $username);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
         if($result && password_verify($password, $result['password'])) {
             $_SESSION['user_id'] = $result['id'];
             $_SESSION['username'] = $username;
@@ -134,6 +135,7 @@ class user {
 
         return false;
     }
+
     public function verifyTokenPassword($token, $password) {
         $query = "SELECT id, username FROM users WHERE password_reset_token = ?";
 
@@ -192,43 +194,44 @@ class user {
     public function changeInfo($data) {
         $query = "UPDATE users SET ";
 
-        if(isset($data->password)) {
-            if(!$this->passwordValidation($data->password))
+        if(isset($data['password']) && $data['password']) {
+            if(!$this->passwordValidation($data['password']))
                 return ["status" => "error", "message" => "Password must contain at least 3 characters, one uppercase letter and one number"];
             $query .= "password = ?, ";
         }
 
-        if(isset($data->email)) {
-            if($this->emailExists($data->email) || !filter_var($data->email, FILTER_VALIDATE_EMAIL))
+        if(isset($data['email']) && $data['email']) {
+            if($this->emailExists($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL))
                 return ["status" => "error", "message" => "Email already exists or invalid"];
             $query .= "email = ?, ";
         }
 
-        if(isset($data->username)) {
-            $username = $this->sanitize($data->username);
-            if(!$username || $this->userExists($data->username))
+        if(isset($data['username']) && $data['username']) {
+            $username = $this->sanitize($data['username']);
+            if(!$username || $this->userExists($data['username']))
                 return ["status" => "error", "message" => "Username already exists or invalid"];
             $query .= "username = ?, ";
         }
-
+        if ($query === "UPDATE users SET ")
+        return ["status" => "error", "message" => "Please enter data"];
         $query = substr($query, 0, -2);
         $query .= " WHERE id = ?";
 
         $stmt = $this->conn->prepare($query);
 
         $i = 1;
-        if(isset($data->password)) {
-            $pass = password_hash($data->password, PASSWORD_DEFAULT);
+        if(isset($data['password']) && $data['password']) {
+            $pass = password_hash($data['password'], PASSWORD_DEFAULT);
             $stmt->bindParam($i, $pass);
             $i++;
         }
 
-        if(isset($data->email)) {
-            $stmt->bindParam($i, $data->email);
+        if(isset($data['email']) && $data['email']) {
+            $stmt->bindParam($i, $data['email']);
             $i++;
         }
 
-        if(isset($data->username)) {
+        if(isset($data['username']) && $data['username']) {
             $stmt->bindParam($i, $username);
             $i++;
         }

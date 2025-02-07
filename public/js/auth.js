@@ -57,7 +57,6 @@ function hideComments(e) {
     e.target.style.display = 'none';
 }
 function likeCommentListener() {
-    try {
         document.getElementById('feed').addEventListener('click', function(e) {
             if (e.target.classList.contains('likes')) {
                 const id = e.target.getAttribute('data-id');
@@ -119,12 +118,10 @@ function likeCommentListener() {
                         el.appendChild(div);
                     });
                     document.getElementById('comments-overlay').style.display = 'flex';
-                })
+                }).catch(Error)
+                    return;
             }
         });
-    } catch (e) {
-        console.error(e);
-    }
 }
 function loadPosts() {
     try {
@@ -268,7 +265,6 @@ function register() {
         alert('Please fill out all fields');
         return;
     }
-
     fetch('/api/register', {
         method: 'POST',
         headers: {
@@ -373,7 +369,7 @@ function deletePost(id) {
     }).then(data => {
         alert(data.message);
         window.location.href = '/';
-    }).catch(e)
+    }).catch(Error) 
         return;
 }
 function notification() {

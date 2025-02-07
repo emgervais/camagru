@@ -28,12 +28,6 @@ edit page
 
 index.php
 
-Session Initialization (Line ~2):
-[ ] Issue: Session is simply started without regenerating the session ID after login or verifying its validity.
-• Recommendation: Regenerate the session ID after a successful login to mitigate session fixation risks.
-CORS Headers (Line ~3–7):
-• Issue: The API allows any origin (Access-Control-Allow-Origin: *), which may expose the API to cross-origin attacks if not intended.
-• Recommendation: Limit allowed origins to trusted domains.
 HTTP Method Handling and Input Data (Line ~16–20):
 • Issue: The API accepts JSON input with file_get_contents("php://input") but does not thoroughly validate or sanitize the input data.
 • Recommendation: Implement proper input validation and sanitization on all inputs.
