@@ -113,8 +113,9 @@ function likeCommentListener() {
                     data.forEach(comment => {
                         const div = document.createElement('div');
                         div.classList.add('comment');
-                        div.innerHTML = `
-                        <p>${comment.username}: ${comment.comment}</p>`;
+                        const p = document.createElement('p');
+                        p.innerText = `${comment.username}: ${comment.comment}`;
+                        div.appendChild(p);
                         el.appendChild(div);
                     });
                     document.getElementById('comments-overlay').style.display = 'flex';

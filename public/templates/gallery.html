@@ -1,4 +1,9 @@
 
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" 
+        src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v18.0"
+        nonce="random_nonce">
+    </script>
     <header>
         <nav>
             <ul>
@@ -21,15 +26,11 @@
             <div id="gallery-addons">
                 <img data-id="1" class="addons" src="../img/cat.png">
                 <img data-id="2" class="addons" src="../img/firework.png">
-                <img data-id="3" class="addons" src="../img/cat.png">
-                <img data-id="4" class="addons" src="../img/cat.png">
-                <img data-id="5" class="addons" src="../img/cat.png">
-                <img data-id="6" class="addons" src="../img/cat.png">
-                <img data-id="7" class="addons" src="../img/cat.png">
-                <img data-id="8" class="addons" src="../img/cat.png">
-                <img data-id="9" class="addons" src="../img/cat.png">
-                <img data-id="10" class="addons" src="../img/cat.png">
-                <img data-id="11" class="addons" src="../img/cat.png">
+                <img data-id="4" class="addons" src="../img/crown.png">
+                <img data-id="5" class="addons" src="../img/gorilla.png">
+                <img data-id="6" class="addons" src="../img/mouth.png">
+                <img data-id="7" class="addons" src="../img/bozo.jpg">
+                <img data-id="8" class="addons" src="../img/42.jpg">
             </div>
         </section>
         <section id="history">
@@ -38,3 +39,16 @@
     <footer>
         <p>A FOOTER</p>
     </footer>
+    <script>
+        function shareOnFacebook() {
+            // Get the current image URL
+            const imageUrl = document.querySelector('#img-container img')?.src;
+            if (!imageUrl) return;
+            
+            // Open Facebook share dialog
+            FB.ui({
+                method: 'share',
+                href: imageUrl,
+            }, function(response){});
+        }
+    </script>

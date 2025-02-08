@@ -150,6 +150,7 @@ header nav ul {
     width: fit-content;
     height: auto;
     max-width: 100%;
+    max-height: fit-content;
 }
 .add-img {
     position: absolute;

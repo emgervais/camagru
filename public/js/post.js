@@ -127,9 +127,9 @@ function upload() {
     
         if (!currentFile) return;
         
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!validTypes.includes(currentFile.type)) {
-            alert('Please select a valid image file (JPEG, PNG, or GIF)');
+            alert('Please select a valid image file (JPEG, PNG, or JPG)');
             return;
         }
         
@@ -152,10 +152,6 @@ function upload() {
     };
 }
 function mergeImages() {
-    if (document.getElementsByClassName('add-img').length === 0) {
-        alert('Please select at least one addon');
-        return;
-    };
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     

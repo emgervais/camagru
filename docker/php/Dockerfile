@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     vim
 
 COPY ./docker/php/php.ini /usr/local/etc/php
+COPY .env /var/www/.env
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install pdo pdo_mysql gd
 

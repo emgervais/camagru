@@ -32,5 +32,3 @@ CREATE table if not exists comments (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
-INSERT INTO posts (user_id, image_path, likes) VALUES (1, 'img/cat.png', 10);
-INSERT INTO posts (user_id, image_path) VALUES (1, 'img/egervais.jpg');

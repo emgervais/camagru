@@ -213,8 +213,8 @@ class Controller {
                 case IMAGETYPE_PNG:
                     $addon = imagecreatefrompng($imgpath);
                     break;
-                case IMAGETYPE_GIF:
-                    $addon = imagecreatefromgif($imgpath);
+                case IMAGETYPE_JPG:
+                    $addon = imagecreatefromjpg($imgpath);
                     break;
                 default:
                     return false;
