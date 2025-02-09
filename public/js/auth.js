@@ -327,13 +327,12 @@ function changeInfo(e) {
         credentials: 'same-origin',
         mode: 'cors',
     }).then(response => {
-        if (response.ok) {
-            alert('changes saved');
-            return;
-        }
         return response.json();
     }).then(data => {
-        alert(data.message);
+        if (data.status == 'success')
+            alert(data.message);
+        else
+            alert(data.message);
     })
 }
 function getGallery() {
